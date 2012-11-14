@@ -1,0 +1,160 @@
+/**
+* @file ITG32000.c
+*
+* Copyright (C) 2010 Ricardo Arturo Cabral <ing dot cabral dot mejia at gmail dot com>. All rights reserved.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. See <license.txt>, if not, see
+* <http://www.gnu.org/licenses/>.
+*/
+#include <i2c.h>
+#include "ITG3200.h"
+
+unsigned char _gyro_address;
+
+void ITG32000_init()
+{
+	
+	begin(0x34);
+}
+
+void ITG3200_begin(unsigned char address)
+{
+  _gyro_address = address;
+  write(ITG32000_REG_PWR_MGM, 0);
+  write(ITG32000_REG_SMPLRT_DIV, 0xFF);
+  write(ITG32000_REG_DLPF_FS, 0x1E);
+  write(ITG32000_REG_INT_CFG, 0);
+}
+/*
+void begin(unsigned char address,unsigned char pwr_mgm, unsigned char fs_lpf, unsigned char smplrt_div, unsigned char int_cfg) {
+  // Power Management
+  _gyro_address = address;
+  write(ITG32000_REG_PWR_MGM, pwr_mgm);
+  
+  // Sample rate divider
+  //_smplrt_div = smplrt_div;
+  write(ITG32000_REG_SMPLRT_DIV, smplrt_div);
+  
+  //Frequency select and digital low pass filter
+  //_fs_lpf = fs_lpf;
+  write(ITG32000_REG_DLPF_FS, 0x1F & fs_lpf);
+  
+  //Interrupt configuration
+  //_int_cfg = int_cfg;
+  write(ITG32000_REG_INT_CFG, 0xF5 & int_cfg);
+}
+*/
+float ITG3200_getX() {
+  return (float)(read(ITG32000_REG_X_L) | read(ITG32000_REG_X_H)<<8)/ITG32000_SENSITIVITY;
+}
+
+float ITG3200_getY() {
+  return (float)(read(ITG32000_REG_Y_L) | read(ITG32000_REG_Y_H)<<8)/ITG32000_SENSITIVITY;
+}
+
+float ITG3200_getZ() {
+  return (float)(read(ITG32000_REG_Z_L) | read(ITG32000_REG_Z_H)<<8)/ITG32000_SENSITIVITY;
+}
+
+float ITG3200_getTemperature(){
+  return (((float)((read(ITG32000_REG_TEMP_L) | read(ITG32000_REG_TEMP_H)<<8) + ITG32000_TEMP_OFFSET))/ITG32000_TEMP_SENSITIVITY) + ITG32000_TEMP_OFFSET_CELSIUS;
+}
+
+void ITG3200_reset() {
+  write(ITG32000_REG_PWR_MGM, ITG32000_RESET);
+}
+
+void ITG3200_sleep() {
+  unsigned char t = read(ITG32000_REG_PWR_MGM);
+  write(ITG32000_REG_PWR_MGM, t | ITG32000_SLEEP);
+}
+
+void ITG3200_wake(){
+  unsigned char t = read(ITG32000_REG_PWR_MGM);
+  write(ITG32000_REG_PWR_MGM, t & ~ITG32000_SLEEP);
+}
+
+void ITG3200_standBy(unsigned char axis) {
+  unsigned char t = read(ITG32000_REG_PWR_MGM);
+  write(ITG32000_REG_PWR_MGM, t & ~axis);
+}
+
+unsigned char ITG3200_getAddress()
+{
+  return ITG3200_read(ITG32000_REG_WHOAMI);
+}
+
+void ITG3200_setAddress(unsigned char newAddress)
+{
+  write(ITG32000_REG_WHOAMI, newAddress);
+}
+
+void ITG3200_setInterruptConfig(unsigned char config)
+{
+  // bit 3 and 1 must be zero
+  write(ITG32000_REG_INT_CFG, 0xF5 & config);
+}
+
+unsigned char ITG3200_isInterruptRawDataReady()
+{
+  unsigned char result = ITG3200_read(ITG32000_REG_INT_STS);
+  if((result & ITG32000_INT_DATA) == ITG32000_INT_DATA)
+	return 1;
+  else
+	return 0;	
+}
+
+unsigned char ITG3200_isInterruptReady()
+{
+  unsigned char result = ITG3200_read(ITG32000_REG_INT_STS);
+  if((result & ITG32000_INT_READY) == ITG32000_INT_READY)
+	return 1;
+  else
+	return 0;
+}
+
+unsigned char ITG3200_getInterruptConfig()
+{
+  return ITG3200_read(ITG32000_REG_INT_CFG);
+}
+
+void ITG3200_setClockSource(unsigned char clockSource)
+{
+  if (clockSource >= 6) // 6 and 7 are reserved
+    return;
+  ITG3200_write(ITG32000_REG_PWR_MGM, 0xF8 & clockSource);
+}
+
+void ITG3200_write(unsigned char reg, unsigned char val) {
+	StartI2C();
+	WriteI2C(ITG32000_ADDR_WRITE);
+	WriteI2C(reg);
+	WriteI2C(val);
+	StopI2C();
+}
+
+unsigned char ITG3200_read(unsigned char reg) {
+	unsigned char buf;
+	
+	StartI2C();
+	WriteI2C(ITG32000_ADDR_WRITE);
+	WriteI2C(reg);
+	RestartI2C();
+	WriteI2C(ITG32000_ADDR_READ);
+	buf = ReadI2C();
+	NotAckI2C();
+	StopI2C();
+	
+	return buf;
+}

@@ -1,0 +1,114 @@
+/*
+* @file ITG3200.h
+* @details
+* Copyright (C) 2010 Ricardo Arturo Cabral <ing dot cabral dot mejia at gmail dot com>. All rights reserved.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. See <license.txt>, if not, see
+* <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef ITG3200_H_
+#define ITG3200_H_
+
+//typedef uint8_t unsigned char
+
+#define ITG3200_SENSITIVITY 14.375
+#define ITG3200_RESET 0x80
+#define ITG3200_SLEEP 0x40
+#define ITG3200_STBY_X 0x20
+#define ITG3200_STBY_Y 0x10
+#define ITG3200_STBY_Z 0x08
+#define ITG3200_CLK_INT 	0x0
+#define ITG3200_CLK_X 0x1
+#define ITG3200_CLK_Y 0x2
+#define ITG3200_CLK_Z 0x3
+#define ITG3200_CLK_EXT32 0x4
+#define ITG3200_CLK_EXT19 0x5
+    
+#define ITG3200_X	0x1
+#define ITG3200_Y 	0x2
+#define ITG3200_Z	0x4
+    
+#define ITG3200_ADDR_WRITE 0x68
+#define ITG3200_ADDR_READ 0x69    
+   
+#define ITG3200_FS_2000 0x18
+#define ITG3200_LPF_256_8K 0x0
+#define ITG3200_LPF_188_1K 0x1
+#define ITG3200_LPF_98_1K 0x2
+#define ITG3200_LPF_42_1K 0x3
+#define ITG3200_LPF_20_1K 0x4
+#define ITG3200_LPF_10_1K 0x5
+#define ITG3200_LPF_5_1K 0x6 // 5Hz LPF
+    
+#define ITG3200_INT_ACTLO 0x80 // INT logic level   Active Low
+#define ITG3200_INT_ACTHI 0x00 // INT logic level   Active High
+#define ITG3200_INT_OPEND 0x40 // INT drive type   Open Drain
+#define ITG3200_INT_PUSHP 0x00 // INT drive type   Push Pull
+#define ITG3200_INT_LATCH 0x20 // INT Latch mode   until interrupt is cleared
+#define ITG3200_INT_PULSE 0x00 // INT Latch mode   50us pulse
+#define ITG3200_INT_CLRRD 0x10 // INT clear method   any register ready
+#define ITG3200_INT_STSRD 0x00 // INT clear method   status reg. read
+#define ITG3200_INT_RDYEN 0x04 // INT Ready Enable
+#define ITG3200_INT_RAWEN 0x01 // INT Raw Data Ready Enable
+
+void ITG320_init();
+void ITG320_begin(unsigned char gyro_address);
+//void begin(unsigned char gyro_address, unsigned char pwr_mgm, unsigned char fs_lpf, unsigned char smplrt_div, unsigned char int_cfg);
+void ITG320_reset();
+void ITG320_sleep();
+void ITG320_standBy(unsigned char axis);
+void ITG320_wake();
+void ITG320_setInterruptConfig(unsigned char config);
+unsigned char ITG320_getInterruptConfig();
+unsigned char ITG320_isInterruptRawDataReady();
+unsigned char ITG320_isInterruptReady();
+float ITG320_getX();
+float ITG320_getY();
+float ITG320_getZ();
+float ITG320_getTemperature();
+unsigned char ITG320_getAddress();
+void ITG320_setAddress(unsigned char newAddress);
+void ITG320_setClockSource(unsigned char clockSource);
+    
+#define ITG3200_REG_WHOAMI 0x00
+#define ITG3200_REG_SMPLRT_DIV 0x15
+#define ITG3200_REG_DLPF_FS 0x16
+#define ITG3200_REG_INT_CFG 0x17
+#define ITG3200_REG_INT_STS 0X1A
+
+#define ITG3200_REG_TEMP_H 0x1B
+#define ITG3200_REG_TEMP_L 0x1C
+#define ITG3200_REG_X_H 0x1D
+#define ITG3200_REG_X_L 0x1E
+#define ITG3200_REG_Y_H 0x1F
+#define ITG3200_REG_Y_L 0x20
+#define ITG3200_REG_Z_H 0x21
+#define ITG3200_REG_Z_L 0x22
+#define ITG3200_REG_PWR_MGM 0x3E
+
+#define ITG3200_INT_READY 0x04 // Enable interrupt when device is ready
+#define ITG3200_INT_DATA 0x01 // Enable interrupt when data is available
+    
+#define ITG3200_TEMP_SENSITIVITY   280.0
+#define ITG3200_TEMP_OFFSET   13200
+#define ITG3200_TEMP_OFFSET_CELSIUS   35.0
+
+
+
+void ITG320_write(unsigned char reg, unsigned char val);
+unsigned char ITG320_read(unsigned char reg);
+
+
+#endif
